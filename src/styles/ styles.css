@@ -1,0 +1,4 @@
+/* styles.css */
+.swal2-container {
+    z-index: 2000 !important; /* Asegúrate de que este valor sea mayor que el z-index del diálogo */
+  }
