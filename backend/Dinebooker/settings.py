@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -130,14 +132,16 @@ WSGI_APPLICATION = 'Dinebooker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+load_dotenv()
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dinebookerdb',              # Nombre de la base de datos
-        'USER': 'mandy',                # Nombre de usuario de PostgreSQL
-        'PASSWORD': 'Acff1987',         # Contraseña de PostgreSQL
-        'HOST': 'localhost',            # Generalmente 'localhost' para una base de datos local
-        'PORT': '5432',                 # Generalmente '5432' para PostgreSQL
+        'ENGINE': os.getenv('DATABASE_ENGINE'),
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': os.getenv('DATABASE_PORT'),
     }
 }
 
