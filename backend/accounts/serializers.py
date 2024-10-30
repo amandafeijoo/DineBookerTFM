@@ -1,15 +1,66 @@
-# serializers.py
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, GiftCard
+from restaurants.models import Reservation, Restaurant, Review
+from restaurants.serializers import RestaurantSerializer
 
+
+# Restaurant Serializer
+class RestaurantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'name', 'address', 'cuisine_type', 'rating', 'price_level', 'website']
+
+
+# Review Serializer
+class ReviewSerializer(serializers.ModelSerializer):
+    restaurant_name = serializers.CharField(source='restaurant.name', read_only=True)
+    user_full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = ['id', 'restaurant', 'restaurant_name', 'user', 'user_full_name', 'rating', 'comment', 'created_at', 'updated_at', 'owner_response']
+        extra_kwargs = {
+            'restaurant': {'required': False},
+            'user': {'required': True},  
+            'rating': {'required': False},
+        }
+
+    def get_user_full_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+# Reservation Serializer
+
+class ReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = '__all__'
+
+    def create(self, validated_data):
+        reservation = super().create(validated_data)
+        user = reservation.user
+        user.points += 500  # Agregar 500 puntos al crear una reserva
+        user.save()
+        return reservation
+
+# User Serializer
 class UserSerializer(serializers.ModelSerializer):
-    # is_owner = serializers.BooleanField(read_only=True)  # Elimina el argumento source  'is_owner' en el método to_representation
+    favorite_restaurants = RestaurantSerializer(many=True, read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True, source='review_set')
+    reservations = ReservationSerializer(many=True, read_only=True, source='reservation_set')
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'countryCode', 'phoneNumber', 'promoCode', 'gender', 'birth_date', 'date_joined', 'is_active']
-        read_only_fields = ['date_joined', 'is_active', ]
+        fields = ['id', 'email', 'first_name', 'last_name', 'countryCode', 'phoneNumber', 'promoCode', 'gender', 'birth_date', 'date_joined', 'is_active', 'points', 'favorite_restaurants', 'reviews', 'reservations']
+        read_only_fields = ['date_joined', 'is_active', 'points']
 
+
+# User Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     verify_password = serializers.CharField(write_only=True)
@@ -45,4 +96,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             gender=validated_data.get('gender', ''),
             birth_date=validated_data.get('birth_date', None)
         )
+        user.points += 500  # Agregar 500 puntos al registrar el usuario
+        user.save()
         return user
+    
+
+
+
+#GiftCard Serializer
+
+class GiftCardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GiftCard
+        fields = '__all__'
