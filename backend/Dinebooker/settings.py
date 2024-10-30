@@ -36,7 +36,7 @@ LOGGING = {
 
 # Application definition
 
-AUTH_USER_MODEL = 'accounts.CustomUser'  # Asegúrate de que esto apunte a tu modelo de usuario personalizado
+AUTH_USER_MODEL = 'accounts.CustomUser'  
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -89,8 +89,8 @@ SIMPLE_JWT = {
 
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',  # Ajusta el puerto según sea necesario
-    'http://127.0.0.1:3000',  # Incluye esta línea si también usas 127.0.0.1
+    'http://localhost:3000',  
+    'http://127.0.0.1:3000',  
 ]
 
 
