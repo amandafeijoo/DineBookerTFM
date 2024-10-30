@@ -1,4 +1,3 @@
-// ImageComponent.jsx
 import styled from 'styled-components';
 
 const Image = styled.img`

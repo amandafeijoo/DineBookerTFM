@@ -28,6 +28,7 @@ const RestaurantsDialog = ({ open, onClose }) => {
           if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
             setRestaurants(data);
+            console.log('Restaurants:', data);
           } else {
             const text = await response.text();
             console.log('Response text:', text);
@@ -44,7 +45,7 @@ const RestaurantsDialog = ({ open, onClose }) => {
 
   const handleRestaurantClick = (restaurant) => {
     setSelectedRestaurant(restaurant);
-    onClose(); // Cierra el diálogo de RestaurantsDialog
+    onClose(); 
   };
 
   const handleUpdateRestaurant = (updatedRestaurant) => {

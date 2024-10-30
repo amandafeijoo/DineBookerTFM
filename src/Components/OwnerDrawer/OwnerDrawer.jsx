@@ -6,54 +6,97 @@ import { Drawer as MuiDrawer } from '@mui/material';
 import styled from 'styled-components';
 import ReservationsDialog from './ReservationsDialog';
 import RestaurantsDialog from './RestaurantsDialog';
-import ReviewsDialog from './ReviewsDialog'; // Importa el ReviewsDialog
-import Swal from 'sweetalert2'; // Asegúrate de tener SweetAlert2 instalado
+import ReviewsDialog from './ReviewsDialog'; 
+import Swal from 'sweetalert2'; 
+import { FaFacebook, FaInstagram, FaTwitter, FaLinkedin } from 'react-icons/fa';
+
 
 const Drawer = styled(MuiDrawer)`
   .MuiDrawer-paper {
-    width: 20%; // Ajusta esto para cambiar el tamaño del Drawer
-    height: 50%; // Ajusta esto para cambiar la altura del Drawer
-    background-color: rgba(0, 0, 0, 0.5); // Ajusta esto para cambiar el color de fondo
-    overflow: auto; 
-    border-left: 1px solid #99aaff; // Añade un borde a la izquierda del Drawer
-    border-top: 1px solid #99aaff; // Añade un borde en la parte superior del Drawer
-    border-bottom: 1px solid #99aaff; // Añade un borde en la parte inferior del Drawer
-    border-top-left-radius: 20px; // Ajusta esto para cambiar la curvatura de la esquina superior derecha
-    border-bottom-left-radius: 20px; // Ajusta esto para cambiar la curvatura de la esquina inferior
+    width: 30%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);    
+    overflow: auto;
+    border-left: 1px solid #99aaff;
+    border-right: 1px solid #99aaff;
+    border-top: 1px solid #99aaff;
+    border-bottom: 1px solid #99aaff;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    @media (max-width: 768px) {
+      width: 90%;
+      padding: 15px;
+    }
+
+    @media (max-width: 480px) {
+      width: 100%;
+      padding: 10px;
+    }
   }
 `;
+
 
 const StyledListItemText = styled(ListItemText)`
   .MuiTypography-root {
-    color: #D3D3D3;
-    margin-top: 16px; // Ajusta este valor según tus necesidades
+    color: #ffff;
+    font-size: 22px;
+    font-family: 'Belleza', sans-serif;
+    margin: 0;
+    margin-top: 20px;
+    margin-left: 40px;
+    margin-bottom: 20px;
 
   }
 `;
-const IconWrapper = styled.span`
-  color: #CCFFCC;
-  margin-top: 16px; // Ajusta este valor según tus necesidades
+const SmallText = styled.div`
+  color: #D3D3D3;
+  font-size: 16px;
+  margin-top: 10px;
+  margin:0;
+  margin-bottom: 20px;
 `;
 
+const ContactInfo = styled.div`
+  color: #D3D3D3;
+  font-size: 16px;
+  margin-top: 10px;
+    margin:0
+`;
+
+
+const HorizontalLine = styled.div`
+  border-top: 1px solid #D3D3D3;
+  width: 80%;
+  margin: 10px 0;
+  margin-bottom: 20px;
+  
+`;
+const IconWrapper = styled.span`
+  color: #CCFFCC;
+  font-size: 24px;
+  margin-top: 10px; 
+  margin-left: 20px; 
+`;
+
+
 const OwnerDrawer = ({ open, onClose }) => {
-  console.log('Rendering OwnerDrawer', open); // Cambia 'isOpen' a 'open'
+  console.log('Rendering OwnerDrawer', open); 
 
   const navigate = useNavigate();
   const [reservationsDialogOpen, setReservationsDialogOpen] = useState(false);
   const [restaurantsDialogOpen, setRestaurantsDialogOpen] = useState(false);
   const [isReviewsDialogOpen, setReviewsDialogOpen] = useState(false);
 
-  const handleLogout = async () => {
-    console.log('handleLogout called'); // Verifica que la función se está llamando
+  const handleOwnerLogout = async () => {
+    console.log('handleLogout called');
   
-    // Verifica todas las claves en localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      console.log(localStorage.key(i), localStorage.getItem(localStorage.key(i)));
-    }
+    const refreshToken = localStorage.getItem('refresh');
+    const accessToken = localStorage.getItem('access');
   
-    const refreshToken = localStorage.getItem('refresh'); // Asegúrate de que 'refresh' es la clave donde se almacena el token de refresco
-  
-    console.log('Refresh Token:', refreshToken); // Agrega este mensaje de consola para verificar el token de refresco
+    console.log('Refresh Token:', refreshToken);
+    console.log('Access Token:', accessToken);
   
     if (!refreshToken) {
       Swal.fire({
@@ -65,40 +108,45 @@ const OwnerDrawer = ({ open, onClose }) => {
     }
   
     try {
-      const response = await fetch('http://localhost:8000/logout/', { // Asegúrate de que la URL sea correcta
+      const response = await fetch('http://localhost:8000/owners/logout/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           refresh: refreshToken,
         }),
       });
   
-      console.log('Logout Response Status:', response.status); // Agrega este mensaje de consola para verificar el estado de la respuesta
+      console.log('Logout Response Status:', response.status);
   
-      if (response.status === 205) {
-        // Elimina los tokens y otros datos del almacenamiento local
+      if (response.status === 200) {
         localStorage.removeItem('refresh');
-        localStorage.removeItem('access'); // Si tienes un token de acceso, también elimínalo
-        localStorage.removeItem('currentOwner'); // Elimina los datos del propietario
-        localStorage.removeItem('isOwnerLoggedIn'); // Elimina el estado de sesión del propietario
+        localStorage.removeItem('access');
+        localStorage.removeItem('currentOwner');
+        localStorage.removeItem('isOwnerLoggedIn');
   
         Swal.fire({
           icon: 'success',
           title: 'Sesión cerrada',
           text: 'Has cerrado sesión exitosamente.',
         }).then(() => {
-          // Redirige al usuario a la página de inicio de sesión o a otra página
-          window.location.href = '/loginowner'; // Cambia '/loginowner' a la ruta deseada
+          window.location.href = '/loginowner';
+        });
+      } else if (response.status === 400) {
+        const errorData = await response.json();
+        console.error('Logout Error Data:', errorData);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'El token de refresco es inválido o ya está en la lista negra. Por favor, inicia sesión de nuevo.',
         });
       } else {
-        const errorData = await response.json();
-        console.error('Logout Error Data:', errorData); // Agrega este mensaje de consola para verificar los datos de error
         throw new Error('Logout failed');
       }
     } catch (error) {
-      console.error('Logout Error:', error); // Agrega este mensaje de consola para verificar cualquier error
+      console.error('Logout Error:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -106,8 +154,7 @@ const OwnerDrawer = ({ open, onClose }) => {
       });
     }
   };
-
-
+  
   // Cambia 'isOpen' a 'open'
   useEffect(() => {
     console.log('La propiedad open de OwnerDrawer cambió:', open);
@@ -142,19 +189,51 @@ const OwnerDrawer = ({ open, onClose }) => {
       <List>
         <ListItem button onClick={openReservationsDialog}>
           <ListItemIcon><IconWrapper><Book /></IconWrapper></ListItemIcon>
-          <StyledListItemText primary="Reservas" />
+          <StyledListItemText primary="RESERVAS" />
         </ListItem>
         <ListItem button onClick={openRestaurantsDialog}>
           <ListItemIcon><IconWrapper><Restaurant /></IconWrapper></ListItemIcon>
-          <StyledListItemText primary="Tus Restaurantes" />
+          <StyledListItemText primary="TUS RESTAURANTES" />
         </ListItem>
         <ListItem button onClick={openReviewsDialog}>
           <ListItemIcon><IconWrapper><Star /></IconWrapper></ListItemIcon>
-          <StyledListItemText primary="Opiniones" />
+          <StyledListItemText primary="OPINIONES" />
         </ListItem>
-        <ListItem button onClick={handleLogout}>
+        <ListItem button onClick={handleOwnerLogout}>
           <ListItemIcon><IconWrapper><ExitToApp /></IconWrapper></ListItemIcon> {/* Agrega el ícono de cierre de sesión */}
-          <StyledListItemText primary="Cerrar Sesión" />
+          <StyledListItemText primary="CERRAR SESION" />
+        </ListItem>
+        <HorizontalLine />
+        <ListItem>
+          <SmallText>ES EN FR IT</SmallText>
+        </ListItem>
+        <ListItem>
+        <IconWrapper>
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
+              <FaFacebook />
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
+              <FaInstagram />
+            </a>
+            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">
+              <FaTwitter />
+            </a>
+            <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">
+              <FaLinkedin />
+            </a>
+          </IconWrapper>
+        </ListItem>
+        <ListItem>
+          <ContactInfo>infodinebooker@gmail.com</ContactInfo>
+        </ListItem>
+        <ListItem>
+          <ContactInfo>BCN (+34) 12345678</ContactInfo>
+        </ListItem>
+        <ListItem>
+          <ContactInfo>MAD (+34) 12345678</ContactInfo>
+        </ListItem>
+        <ListItem>
+          <ContactInfo>© 2024 AFGROUP</ContactInfo>
         </ListItem>
       </List>
 

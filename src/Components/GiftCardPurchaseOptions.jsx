@@ -31,7 +31,6 @@ const ButtonContainer = styled.div`
 `;
 
 const Button = styled.button`
-  // Add your button styles here
   flex: 1;
   font-size: 1.2em;
   border: none;
@@ -40,7 +39,7 @@ const Button = styled.button`
   background-color: #e8ffcc;
   border: 2px solid #7575f5;
   box-shadow: 0px 1px 3px #7575f5;
-  width: 600px; // Esto hará que el botón tenga un ancho de 200px
+  width: 600px; 
   &:hover {
     cursor: pointer;
     color: #d0ff94;
@@ -52,7 +51,7 @@ const Button = styled.button`
 `;
 
 const Button2 = styled.button`
-    // Add your button styles here
+    
     flex: 1;
     border: none;
     padding: 12px;
@@ -77,7 +76,7 @@ const ImageGrid = styled.div`
   grid-auto-rows: 200px;
   gap: 10px;
   margin: 50px auto;
-  width: 80%; // Esto hará que ImageGrid ocupe el 80% del ancho disponible
+  width: 80%; 
   border-radius: 10px;
   border: 1px solid #333;
   box-shadow: 5px 5px 5px #333;  
@@ -124,7 +123,7 @@ const StyledP = styled.p`
     font-size: 18px;
     color: #333;
     margin: 40px auto;
-    width: 80%; // Esto hará que StyledP ocupe el 80% del ancho disponible
+    width: 80%; 
     text-align: justify;
 `;
 

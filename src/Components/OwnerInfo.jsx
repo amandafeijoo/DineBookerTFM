@@ -1,11 +1,11 @@
-import React from 'react';
-import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import OwnerInfoDetails from './OwnerInfoDetails';
-import VideoAndJoinButton from './VideoAndJoinButton';
+import React from "react";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import OwnerInfoDetails from "./OwnerInfoDetails";
+import VideoAndJoinButton from "./VideoAndJoinButton";
 
 const Title = styled.h1`
-  font-family: 'Belleza', sans-serif;
+  font-family: "Belleza", sans-serif;
   text-align: center;
   margin-left: 40px;
   font-size: 2.2em;
@@ -18,10 +18,10 @@ const Title = styled.h1`
 `;
 
 const Subtitle = styled.h2`
-  font-family: 'Belleza', sans-serif;
+  font-family: "Belleza", sans-serif;
   text-align: left;
-  margin-left: 80px; 
-  margin-top: 50px; 
+  margin-left: 80px;
+  margin-top: 50px;
   font-size: 1.2em;
   margin-bottom: 50px;
 `;
@@ -34,7 +34,7 @@ const MainContainer = styled.div`
 `;
 
 const Divider = styled.hr`
-  border: 2px solid #F5DEB3;
+  border: 2px solid #f5deb3;
   height: 2px;
   width: 50%;
   margin-top: 20px;
@@ -62,29 +62,25 @@ const BackgroundVideo = styled.video`
   height: auto;
   border-radius: 10px;
   border: 3px solid #99aaff;
-  box-shadow: 
-    0px 4px 20px rgba(255, 105, 180, 0.5),  // Rosa
-    0px 4px 20px rgba(152, 224, 152, 0.5),  // Verde
-    0px 4px 20px rgba(153, 170, 255, 0.5);  // Azul  
+  box-shadow: 0px 4px 20px rgba(255, 105, 180, 0.5),
+    0px 4px 20px rgba(152, 224, 152, 0.5), 0px 4px 20px rgba(153, 170, 255, 0.5);
   margin-left: 20px;
 `;
 
 const JoinButton = styled.button`
   display: block;
   width: auto;
-  margin: 20px auto; // Centra el botón horizontalmente
-  font-family: 'Belleza', sans-serif;
+  margin: 20px auto;
+  font-family: "Belleza", sans-serif;
   font-size: 1.7em;
   margin-bottom: 50px;
-  background-color: #87CEFA;
+  background-color: #87cefa;
   color: #000000;
   border: 3px solid #646cff;
   border-radius: 10px;
   padding: 14px 40px;
-  box-shadow: 
-    0px 4px 20px rgba(255, 105, 180, 0.5),  // Rosa
-    0px 4px 20px rgba(152, 224, 152, 0.5),  // Verde
-    0px 4px 20px rgba(153, 170, 255, 0.5);  // Azul
+  box-shadow: 0px 4px 20px rgba(255, 105, 180, 0.5),
+    0px 4px 20px rgba(152, 224, 152, 0.5), 0px 4px 20px rgba(153, 170, 255, 0.5);
   font-size: 1.2em;
   cursor: pointer;
   &:hover {
@@ -97,19 +93,23 @@ const OwnerInfo = () => {
   const navigate = useNavigate();
 
   return (
-    <> 
+    <>
       <MainContainer>
         <TextContainer>
           <Title>Atrae y gestiona nuevos clientes a tu restaurante</Title>
-          <Subtitle>¿Deseas aumentar los ingresos de tu restaurante y optimizar tu actividad? Comienza a recibir nuevas reservas de comensales locales y de todas partes del mundo.</Subtitle>
-          <JoinButton onClick={() => navigate('/registrationstepper')}>
+          <Subtitle>
+            ¿Deseas aumentar los ingresos de tu restaurante y optimizar tu
+            actividad? Comienza a recibir nuevas reservas de comensales locales
+            y de todas partes del mundo.
+          </Subtitle>
+          <JoinButton onClick={() => navigate("/registrationstepper")}>
             ÚNETE
           </JoinButton>
         </TextContainer>
         <VideoContainer>
           <BackgroundVideo autoPlay loop muted>
             <source src="/images/EresPropietario.mp4" type="video/mp4" />
-          </BackgroundVideo>          
+          </BackgroundVideo>
         </VideoContainer>
       </MainContainer>
       <Divider />

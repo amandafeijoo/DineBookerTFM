@@ -13,7 +13,7 @@ const VideoContainer = styled.div`
 `;
 
 const StyledVideo = styled.video`
-  width: 60%; // Ajusta este valor a lo que necesites
+  width: 60%; 
   height: auto;
     border-radius: 10px;
     margin-top: 40px;
@@ -26,11 +26,11 @@ const StyledH2 = styled.h2`
     text-align: center;
     font-size: 2em;
     margin-top: 90px;
-    width: 50%; // Esto hará que StyledH2 ocupe el 80% del ancho disponible   
+    width: 50%;   
     margin-bottom: 20px;
     font-weight: bold;
     color: #333;
-    background-color: rgba(238, 220, 130, 0.5);  // 0.5 es el nivel de transparencia    box-shadow: 5px 5px 5px #333; 
+    background-color: rgba(238, 220, 130, 0.5);  
     border-radius: 10px;
     padding: 12px;
     box-shadow: 0px 1px 3px #333;
