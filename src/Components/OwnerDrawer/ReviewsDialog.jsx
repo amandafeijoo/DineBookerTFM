@@ -29,6 +29,8 @@ const ReviewsDialog = ({ open, onClose }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("Fetched restaurant data:", data);
+
       return data;
     } catch (error) {
       console.error("Error fetching restaurant data:", error);
@@ -63,61 +65,6 @@ const ReviewsDialog = ({ open, onClose }) => {
     }
   };
 
-  useEffect(() => {
-    if (open) {
-      const accessToken = localStorage.getItem("access");
-
-      if (!accessToken) {
-        console.error("Access token is missing");
-        return;
-      }
-
-      const fetchRestaurantData = async (token) => {
-        try {
-          const response = await fetch(
-            "http://localhost:8000/`http://localhost:8000/reviews/${reviewId}/response/",
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Error fetching restaurant data");
-          }
-
-          const data = await response.json();
-          return data;
-        } catch (error) {
-          console.error("Error fetching restaurant data:", error);
-          return [];
-        }
-      };
-
-      fetchRestaurantData(accessToken)
-        .then((data) => {
-          console.log("Fetched restaurant data:", data);
-          setRestaurants(data);
-          const initialResponses = {};
-          data.forEach((restaurant) => {
-            restaurant.restaurant_reviews?.forEach((review) => {
-              if (review.owner_response) {
-                initialResponses[review.id] = review.owner_response;
-              }
-            });
-          });
-          console.log("Initial responses:", initialResponses);
-          setResponses(initialResponses);
-        })
-        .catch((error) => {
-          console.error("Error fetching restaurant data:", error);
-        });
-    }
-  }, [open]);
-
   const handleResponseChange = (reviewId, event) => {
     setResponses({
       ...responses,
@@ -132,9 +79,18 @@ const ReviewsDialog = ({ open, onClose }) => {
     });
   };
 
+  const handleChange = (reviewId, event) => {
+    setResponses({
+      ...responses,
+      [reviewId]: event.target.value,
+    });
+    handleResponseChange(reviewId, event);
+  };
+
   useEffect(() => {
     if (open) {
       const accessToken = localStorage.getItem("access");
+      console.log("Access token:", accessToken);
 
       if (!accessToken) {
         console.error("Access token is missing");
@@ -163,19 +119,15 @@ const ReviewsDialog = ({ open, onClose }) => {
   }, [open]);
 
   useEffect(() => {
-    if (open) {
-      const initialResponses = {};
-      const initialEditing = {};
-      restaurants.forEach((restaurant) => {
-        restaurant.reviews?.forEach((review) => {
-          initialResponses[review.id] = review.owner_response || "";
-          initialEditing[review.id] = false;
-        });
+    const initialResponses = {};
+    restaurants.forEach((restaurant) => {
+      restaurant.restaurant_reviews?.forEach((review) => {
+        initialResponses[review.id] = review.owner_response || "";
       });
-      setResponses(initialResponses);
-      setIsEditing(initialEditing);
-    }
-  }, [open, restaurants]);
+    });
+    console.log("Initial Responses:", initialResponses);
+    setResponses(initialResponses);
+  }, [restaurants]);
 
   const handleSaveResponse = async (reviewId) => {
     try {
@@ -203,6 +155,7 @@ const ReviewsDialog = ({ open, onClose }) => {
       }
 
       const data = await response.json();
+      console.log("Respuesta guardada:", data);
 
       setResponses({
         ...responses,
@@ -305,7 +258,7 @@ const ReviewsDialog = ({ open, onClose }) => {
             <div key={restaurant.id}>
               <ListItem>
                 <ListItemText
-                  primary={`Restaurante: ${restaurant.name}, Dirección: ${restaurant.address}`}
+                  primary={`${restaurant.name}`}
                   primaryTypographyProps={{
                     ...fontFamilyStyle,
                     fontSize: "1.5rem",
@@ -330,8 +283,10 @@ const ReviewsDialog = ({ open, onClose }) => {
                     }}
                   >
                     <ListItemText
-                      primary={`Usuario: ${review.user_first_name} ${review.user_last_name}`}
-                      secondary={`Fecha: ${review.date} - Calificación: ${review.rating}`}
+                      primary={`Usuario: ${review.user_full_name}`}
+                      secondary={`Fecha: ${new Date(
+                        review.created_at
+                      ).toLocaleDateString()} - Calificación: ${review.rating}`}
                       primaryTypographyProps={fontFamilyStyle}
                       secondaryTypographyProps={fontFamilyStyle}
                     />
@@ -342,7 +297,7 @@ const ReviewsDialog = ({ open, onClose }) => {
                     <TextField
                       label="Respuesta"
                       value={responses[review.id] || ""}
-                      onChange={(e) => handleResponseChange(review.id, e)}
+                      onChange={(e) => handleChange(review.id, e)}
                       fullWidth
                       style={{ marginTop: "10px" }}
                       disabled={

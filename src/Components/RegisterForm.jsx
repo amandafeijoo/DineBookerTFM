@@ -15,14 +15,16 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { styled } from "@mui/system";
 import Box from "@mui/material/Box";
 import Swal from "sweetalert2";
+import Snackbar from "@mui/material/Snackbar";
+import { useNavigate } from "react-router-dom";
 
 const StyledButton = styled(Button)`
   background-color: #99aaff;
   color: #333;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   border: 2px solid #98e098;
-  border-radius: 5px; 
-  margin-right: 110px; 
+  border-radius: 5px;
+  margin-right: 110px;
   &:hover {
     background-color: #99aaff;
   }
@@ -42,7 +44,7 @@ const StyledBox = styled(Box)({
   borderRadius: "5px",
   padding: "10px",
   margin: "10px",
-  backgroundColor: "rgba(0, 0, 0, 0.1)", 
+  backgroundColor: "rgba(0, 0, 0, 0.1)",
 });
 
 const RegisterForm = ({ open, onClose }) => {
@@ -68,10 +70,9 @@ const RegisterForm = ({ open, onClose }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [dialogOpen, setDialogOpen] = useState(true);
+  const [promoCodeValid, setPromoCodeValid] = useState(null);
 
-  const handlePromoCodeChange = (event) => {
-    setPromoCode(event.target.value);
-  };
+  const navigate = useNavigate();
 
   const countryCodes = [
     { value: "+1", label: "🇺🇸 +1" },
@@ -124,80 +125,138 @@ const RegisterForm = ({ open, onClose }) => {
       last_name: form.last_name,
       email: form.email,
       password: form.password,
-      verify_password: form.verify_password, 
+      verify_password: form.verify_password,
       countryCode: countryCode,
       phoneNumber: phoneNumber,
-      promoCode: promoCode,
+      promoCode: form.promoCode,
     };
 
     console.log("Request Data:", requestData);
 
-    const response = await fetch("http://localhost:8000/accounts/register/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Response Data:", data);
-
-      localStorage.setItem("token", data.token);
-
-      Swal.fire({
-        icon: "success",
-        title: "Usuario creado con éxito",
-        showConfirmButton: false,
-        timer: 3000,
+    try {
+      const response = await fetch("http://localhost:8000/accounts/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
       });
 
-      setForm({
-        first_name: "",
-        last_name: "",
-        email: "",
-        password: "",
-        verify_password: "",
-        phoneNumber: "",
-        countryCode: "",
-        promoCode: "",
-      });
-      setPhoneNumber("");
-      setCountryCode("+34");
-      setPromoCode("");
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Response Data:", data);
 
-      setTimeout(() => {
-        setDialogOpen(false);
-      }, 3000);
-    } else {
-      const errorData = await response.json();
-      console.error(
-        "Error:",
-        response.status,
-        response.statusText,
-        errorData.error
-      );
+        localStorage.setItem("token", data.token);
+        onClose();
+        Swal.fire({
+          icon: "success",
+          title: "Usuario creado con éxito",
+          showConfirmButton: false,
+          timer: 3000,
+        }).then(() => {
+          navigate("/");
+        });
 
+        setForm({
+          first_name: "",
+          last_name: "",
+          email: "",
+          password: "",
+          verify_password: "",
+          phoneNumber: "",
+          countryCode: "",
+          promoCode: "",
+        });
+        setPhoneNumber("");
+        setCountryCode("+34");
+        setPromoCode("");
+      } else {
+        const errorData = await response.json();
+        console.error(
+          "Error:",
+          response.status,
+          response.statusText,
+          errorData.error
+        );
+        onClose();
+
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorData.error,
+        }).then(() => {
+          navigate("/");
+        });
+
+        switch (errorData.error) {
+          case "EMAIL_IN_USE":
+            setMessage("El correo electrónico ya está en uso");
+            break;
+          case "PASSWORDS_DO_NOT_MATCH":
+            setMessage("Las contraseñas no coinciden");
+            break;
+          case "MISSING_REQUIRED_FIELDS":
+            setMessage("Faltan campos requeridos");
+            break;
+          default:
+            setMessage("Hubo un error al crear el usuario");
+        }
+      }
+    } catch (error) {
+      console.error("Error al completar el registro", error);
+
+      onClose();
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: errorData.error,
+        title: "Error al completar el registro",
+        text: error.message || "Hubo un error al completar tu registro.",
+      }).then(() => {
+        navigate("/");
       });
+    }
+  };
 
-      switch (errorData.error) {
-        case "EMAIL_IN_USE":
-          setMessage("El correo electrónico ya está en uso");
-          break;
-        case "PASSWORDS_DO_NOT_MATCH":
-          setMessage("Las contraseñas no coinciden");
-          break;
-        case "MISSING_REQUIRED_FIELDS":
-          setMessage("Faltan campos requeridos");
-          break;
-        default:
-          setMessage("Hubo un error al crear el usuario");
+  const handlePromoCodeChange = (event) => {
+    setForm({ ...form, promoCode: event.target.value });
+  };
+
+  const validatePromoCode = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/accounts/validate-promo-code/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ promo_code: form.promoCode }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Promo Code Validated:", data);
+        setPromoCodeValid(true);
+        setSnackbarMessage(
+          "Código promocional válido. Se han otorgado 1000 puntos."
+        );
+      } else {
+        const errorData = await response.json();
+        console.error(
+          "Error:",
+          response.status,
+          response.statusText,
+          errorData.message
+        );
+        setPromoCodeValid(false);
+        setSnackbarMessage("Código promocional no válido.");
       }
+    } catch (error) {
+      console.error("Error al validar el código promocional", error);
+      setPromoCodeValid(false);
+      setSnackbarMessage("Error al validar el código promocional.");
+    } finally {
+      setSnackbarOpen(true);
     }
   };
 
@@ -306,16 +365,28 @@ const RegisterForm = ({ open, onClose }) => {
             onChange={(event) => setPhoneNumber(event.target.value)}
             style={{ width: "80%" }}
           />
-          <TextField
-            margin="dense"
-            name="promoCode"
-            label="Código promocional"
-            type="text"
-            fullWidth
-            value={form.promoCode}
-            onChange={handlePromoCodeChange}
-            placeholder="Bienvenido500"
-          />
+          <form onSubmit={handleFormSubmit}>
+            <TextField
+              margin="dense"
+              name="promoCode"
+              label="Código promocional"
+              type="text"
+              fullWidth
+              value={form.promoCode}
+              onChange={handlePromoCodeChange}
+              placeholder="Bienvenido500"
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={validatePromoCode}
+            >
+              Validar Código
+            </Button>
+
+            {promoCodeValid === true && <p>Código promocional válido.</p>}
+            {promoCodeValid === false && <p>Código promocional no válido.</p>}
+          </form>
         </DialogContent>
         <DialogActions>
           <StyledButton onClick={onClose}>Cancelar</StyledButton>

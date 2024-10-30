@@ -56,7 +56,7 @@ const InfoContainer = styled.div`
 
 const InfoBox = styled.div`
   background-color: white;
-  border: 3px solid #a2d2ff; 
+  border: 3px solid #a2d2ff;
   padding: 20px;
   flex: 1;
   margin: 10px;
@@ -73,62 +73,86 @@ const InfoBoxIcon = styled.div`
 
 const RecommendFriendDialog = ({ open, onClose }) => {
   const [promoCode, setPromoCode] = useState("");
+  const [inputPromoCode, setInputPromoCode] = useState("");
+
   useEffect(() => {
     if (open) {
-      const token = localStorage.getItem("token"); 
+      const token = localStorage.getItem("access_token");
       console.log("Token:", token);
 
-      let decodedUserId;
-
       if (token) {
-        const base64Url = token.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split("")
-            .map(function (c) {
-              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-            })
-            .join("")
-        );
-
-        const decodedJWT = JSON.parse(jsonPayload);
-        decodedUserId = decodedJWT.user_id;
-        console.log("UserId:", decodedUserId);
-      }
-
-      fetch("http://localhost:8000/accounts/generate_promo_code/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Origin: "http://localhost:5173",
-          Authorization: `JWT ${token}`, 
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Código promocional:", data.promo_code);
-          console.log("Mensaje:", data.message);
-          setPromoCode(data.promo_code);
+        fetch("http://localhost:8000/accounts/generate_promo_code/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Origin: "http://localhost:5173",
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .catch((error) => {
-          console.error(
-            "Hubo un error al generar el código promocional:",
-            error
-          );
-        });
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Código promocional:", data.promo_code);
+            console.log("Mensaje:", data.message);
+            setPromoCode(data.promo_code);
+          })
+          .catch((error) => {
+            console.error(
+              "Hubo un error al generar el código promocional:",
+              error
+            );
+          });
+      }
     }
-  }, [open]); 
+  }, [open]);
+
+  const handlePromoCodeSubmit = () => {
+    const token = localStorage.getItem("access_token");
+    console.log("Token:", token);
+
+    fetch("http://localhost:8000/accounts/validate_promo_code/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ promo_code: inputPromoCode }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Mensaje:", data.message);
+        if (
+          data.message ===
+          "Código promocional válido. Se han otorgado 1000 puntos."
+        ) {
+          alert("¡Felicidades! Has recibido 1000 puntos.");
+        } else {
+          alert("Código promocional no válido.");
+        }
+      })
+      .catch((error) => {
+        console.error("Hubo un error al validar el código promocional:", error);
+      });
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(promoCode); 
+    navigator.clipboard.writeText(promoCode);
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
         <Typography
-          variant="h3"
+          variant="h2"
           align="center"
           style={{
             fontFamily: "'Belleza', sans-serif",

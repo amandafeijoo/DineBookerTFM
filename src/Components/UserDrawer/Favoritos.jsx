@@ -4,8 +4,11 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useState, useEffect, useContext } from "react";
 import StarIcon from "@mui/icons-material/Star";
 import { FavoriteContext } from "../../Context/FavoriteContext";
+import { useNavigate } from "react-router-dom";
 
 const Favoritos = ({ open, onClose }) => {
+  const navigate = useNavigate();
+
   const { favorites, setFavorites, handleRemoveFavorite } =
     useContext(FavoriteContext);
   const token = localStorage.getItem("userAccess");
@@ -57,6 +60,18 @@ const Favoritos = ({ open, onClose }) => {
   }, [userId, token, setFavorites]);
 
   const hasFavorites = favorites && favorites.length > 0;
+
+  const handleRestaurantClick = (id) => {
+    if (id) {
+      console.log("Restaurant ID:", id);
+      navigate(`/restaurantdetails/${id}`);
+      if (onClose) {
+        onClose();
+      }
+    } else {
+      console.error("Restaurant ID is undefined");
+    }
+  };
 
   return (
     <Dialog
@@ -116,6 +131,8 @@ const Favoritos = ({ open, onClose }) => {
         </>
       ) : (
         favorites.map((favorite) => {
+          console.log("Favorite object:", favorite);
+
           const imageUrl =
             favorite.photos.length > 0
               ? `http://localhost:8000${favorite.photos[0].image}`
@@ -128,8 +145,9 @@ const Favoritos = ({ open, onClose }) => {
                 boxShadow:
                   "0px 4px 20px rgba(255, 105, 180, 0.5), 0px 4px 20px rgba(152, 224, 152, 0.5), 0px 4px 20px rgba(153, 170, 255, 0.5)",
                 borderRadius: "10px",
-                padding: "20px",
+                cursor: "pointer",
               }}
+              onClick={() => handleRestaurantClick(favorite.id)}
             >
               <div style={{ display: "flex", alignItems: "center" }}>
                 <img

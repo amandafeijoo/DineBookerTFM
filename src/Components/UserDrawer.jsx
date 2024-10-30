@@ -44,6 +44,7 @@ const Drawer = styled(MuiDrawer)`
     border-bottom: 1px solid #99aaff;
     border-top-left-radius: 20px;
     border-bottom-left-radius: 20px;
+    width: 300px;
   }
 `;
 
@@ -89,6 +90,8 @@ const UserDrawer = ({ open, onClose }) => {
         localStorage.removeItem("userToken");
         localStorage.removeItem("currentOwner");
         localStorage.removeItem("isOwnerLoggedIn");
+        localStorage.removeItem("userAccess");
+        localStorage.removeItem("userRefresh");
 
         setCurrentUser(null);
         onClose();

@@ -372,9 +372,9 @@ const PaymentComponent = () => {
     navigate("/giftcardpurchase");
   };
 
-  const handleEdit = () => {
-    navigate("/GiftCardPurchase");
-  };
+  // const handleEdit = () => {
+  //   navigate("/GiftCardPurchase");
+  // };
 
   const navigateToStep0 = () => {
     navigate("/giftcardpurchase");
@@ -445,7 +445,7 @@ const PaymentComponent = () => {
                   </Typography>
                   <IconContainer>
                     <StyledTrashIcon onClick={() => handleDelete(index)} />{" "}
-                    <StyledEditIcon onClick={() => handleEdit(index)} />{" "}
+                    {/* <StyledEditIcon onClick={() => handleEdit(index)} />{" "} */}
                   </IconContainer>
                   <StyledImage src={order.image} alt="Product" />
                   <CustomTextField
