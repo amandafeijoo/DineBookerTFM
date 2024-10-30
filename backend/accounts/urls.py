@@ -4,7 +4,7 @@ from .views import (
     UserReservationsView, CancelReservationView, UserFavoritesView, 
     UserPointsView, UserReviewsView,UserDetailsView, AddFavoriteView, 
     RemoveFavoriteView, ReviewUpdateView,ReviewDeleteView, GenerateQRCodeView, 
-    giftcard_purchase,UserGiftCardListView, DeleteGiftCardView, ReviewCreateView
+    giftcard_purchase,UserGiftCardListView, DeleteGiftCardView, ReviewCreateView,GeneratePromoCodeView, ValidatePromoCodeView, UserDeleteView
 )
 
 urlpatterns = [
@@ -29,6 +29,9 @@ urlpatterns = [
     path('giftcardpurchase/', giftcard_purchase, name='giftcard_purchase'),
     path('usergiftcards/', UserGiftCardListView.as_view(), name='user_giftcard_list'),
     path('deletegiftcard/<int:giftcard_id>/', DeleteGiftCardView.as_view(), name='delete_giftcard'),
-    
+    path('generate_promo_code/', GeneratePromoCodeView.as_view(), name='generate_promo_code'),
+    path('validate-promo-code/', ValidatePromoCodeView.as_view(), name='validate_promo_code'),
+    path('delete-account/', UserDeleteView.as_view(), name='delete-account'),
+
 
 ]

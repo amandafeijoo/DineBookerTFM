@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import CustomUser, GiftCard
+from .models import CustomUser, GiftCard, PromoCode
 from restaurants.models import Reservation, Restaurant, Review
 from restaurants.serializers import RestaurantSerializer
+
+
 
 
 # Restaurant Serializer
@@ -56,24 +58,30 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'countryCode', 'phoneNumber', 'promoCode', 'gender', 'birth_date', 'date_joined', 'is_active', 'points', 'favorite_restaurants', 'reviews', 'reservations']
+        fields = ['id', 'email', 'first_name', 'last_name', 'countryCode', 'phoneNumber', 'promoCode', 'promoCodeExpiry', 'gender', 'birth_date', 'date_joined', 'is_active', 'points', 'favorite_restaurants', 'reviews', 'reservations']
         read_only_fields = ['date_joined', 'is_active', 'points']
 
 
-# User Register Serializer
+# Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     verify_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password', 'verify_password', 'first_name', 'last_name', 'countryCode', 'phoneNumber', 'promoCode', 'gender', 'birth_date']
+        fields = [
+            'email', 'password', 'verify_password', 'first_name', 'last_name', 
+            'countryCode', 'phoneNumber', 'promoCode', 'promoCodeExpiry', 
+            'promo_code_used', 'gender', 'birth_date'
+        ]
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False},
             'countryCode': {'required': False},
             'phoneNumber': {'required': False},
             'promoCode': {'required': False},
+            'promoCodeExpiry': {'required': False},
+            'promo_code_used': {'required': False},
             'gender': {'required': False},
             'birth_date': {'required': False},
         }
@@ -93,15 +101,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             countryCode=validated_data.get('countryCode', ''),
             phoneNumber=validated_data.get('phoneNumber', ''),
             promoCode=validated_data.get('promoCode', ''),
+            promoCodeExpiry=validated_data.get('promoCodeExpiry', None),
             gender=validated_data.get('gender', ''),
             birth_date=validated_data.get('birth_date', None)
         )
-        user.points += 500  # Agregar 500 puntos al registrar el usuario
-        user.save()
         return user
-    
-
-
 
 #GiftCard Serializer
 
@@ -109,3 +113,10 @@ class GiftCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = GiftCard
         fields = '__all__'
+
+############ PromoCode Serializer ############
+
+class PromoCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromoCode
+        fields = ['code', 'user', 'created_at', 'is_valid']

@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+import logging
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -25,6 +26,8 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+logger = logging.getLogger(__name__)
+
 class CustomUser(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
@@ -33,6 +36,8 @@ class CustomUser(AbstractUser):
     countryCode = models.CharField(max_length=10)
     phoneNumber = models.CharField(max_length=15)
     promoCode = models.CharField(max_length=20, blank=True, null=True)  
+    promoCodeExpiry = models.DateTimeField(null=True, blank=True)
+    promo_code_used = models.BooleanField(default=False, blank=True, null=True) 
     gender = models.CharField(max_length=10, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -48,6 +53,10 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.debug(f"Saved user: {self.email} with promoCode: {self.promoCode}")
 
 # GiftCard model
 
@@ -79,3 +88,12 @@ class GiftCard(models.Model):
     def __str__(self):
         return f"{self.card_holder_name} - {self.card_number}"
     
+
+class PromoCode(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_valid = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.code

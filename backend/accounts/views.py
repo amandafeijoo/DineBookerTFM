@@ -30,16 +30,50 @@ from .serializers import ReviewSerializer
 import json
 import uuid
 from datetime import datetime
-
-
-
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework import serializers
 
 
 ##########User registration view##########
+logger = logging.getLogger(__name__)
+
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  # Permitir a los usuarios no autenticados acceder a esta vista
+    permission_classes = [AllowAny]  
+
+    def perform_create(self, serializer):
+        try:
+            user = serializer.save()
+            promo_code = self.request.data.get('promoCode')
+            
+            logger.info(f"Received promo code: {promo_code}")
+            
+            if promo_code:
+                referred_users = CustomUser.objects.filter(promoCode=promo_code)
+                if referred_users.exists():
+                    referred_user = referred_users.first()  # Tomar el primer usuario encontrado
+                    logger.info(f"Found referred_user: {referred_user.email}")
+                    if referred_user.promoCodeExpiry and referred_user.promoCodeExpiry < timezone.now():
+                        raise serializers.ValidationError({'promo_code': 'Código promocional ha expirado.'})
+                    user.promo_code_used = True
+                    user.points += 1000  # Agrega 1000 puntos al nuevo usuario
+                    referred_user.points += 500  # Agrega 500 puntos al usuario referido
+                    referred_user.save()
+                else:
+                    raise serializers.ValidationError({'promo_code': 'Código promocional no válido.'})
+            else:
+                user.points += 500  # Agrega 500 puntos al nuevo usuario sin código promocional
+
+            user.save()
+            logger.info(f"User {user.id} now has {user.points} points")
+        except Exception as e:
+            logger.error(f"Error during user registration: {str(e)}")
+            raise e
+
+
+
 
 
 #########User detail view##########
@@ -79,6 +113,23 @@ class UserUpdateView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user
     
+##############User delete view####################
+class UserDeleteView(generics.DestroyAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_active = False
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+    
 ##############Get user reservations##############
 class UserReservationsView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -104,6 +155,7 @@ class UserReservationsView(APIView):
 
 
 ###############Create reservation####################
+
 class CancelReservationView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -113,8 +165,6 @@ class CancelReservationView(APIView):
         reservation.delete()
         return Response(status=204)
     
-
-
     
 #################Get user points#####################
 
@@ -268,8 +318,6 @@ class UserDetailsView(APIView):
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
-
-
 
 
 ############## FAVORITES VIEWS ####################
@@ -444,3 +492,58 @@ class DeleteGiftCardView(APIView):
             return JsonResponse({'message': 'Gift card deleted successfully'}, status=200)
         except GiftCard.DoesNotExist:
             return JsonResponse({'error': 'Gift card not found'}, status=404)
+        
+
+############## promo code view ####################
+logger = logging.getLogger(__name__)
+
+# Generate promo code view
+
+class GeneratePromoCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        logger.debug(f"Request received to generate promo code for user: {user.email}")
+
+        if user.promoCode:
+            logger.debug(f"User {user.email} already has a promo code: {user.promoCode}")
+            return Response({'promo_code': user.promoCode, 'message': 'Ya tienes un código promocional.'}, status=status.HTTP_200_OK)
+        
+        promo_code = str(uuid.uuid4())[:8]  # Genera un código promocional único
+        user.promoCode = promo_code
+        user.promoCodeExpiry = timezone.now() + timedelta(days=7)  # Establece la fecha de expiración
+        user.save()
+        logger.debug(f"Generated promo_code: {promo_code} for user: {user.email}")
+        return Response({'promo_code': promo_code, 'message': 'Código promocional generado con éxito.'}, status=status.HTTP_201_CREATED)
+
+
+
+# Validate promo code view
+logger = logging.getLogger(__name__)
+
+class ValidatePromoCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        promo_code = request.data.get('promo_code')
+        logger.debug(f"Received promo_code: {promo_code}")
+
+        if not promo_code:
+            logger.debug("No promo_code provided")
+            return Response({'message': 'Código promocional es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            referred_user = CustomUser.objects.get(promoCode=promo_code)
+            logger.debug(f"Found referred_user: {referred_user}")
+
+            # Verificar si el código promocional ha expirado
+            if referred_user.promoCodeExpiry and referred_user.promoCodeExpiry < timezone.now():
+                logger.debug("Promo code has expired")
+                return Response({'message': 'Código promocional ha expirado.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            logger.debug("Promo code is valid")
+            return Response({'message': 'Código promocional válido.'}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            logger.debug("Promo code does not exist")
+            return Response({'message': 'Código promocional no válido.'}, status=status.HTTP_400_BAD_REQUEST)
